@@ -1,0 +1,21 @@
+.home-container {
+  background-color: #0e0e10;
+  color: #fff;
+  min-height: 100vh;
+
+  .banner {
+    height: 300px;
+    background: linear-gradient(to right, #1e1e1e, #2e2e2e);
+    border-radius: 8px;
+    font-size: 2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  a {
+    &:hover {
+      color: #e50914 !important;
+    }
+  }
+}
