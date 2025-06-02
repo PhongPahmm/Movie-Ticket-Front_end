@@ -28,12 +28,7 @@ axiosConfig.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token hết hạn hoặc không hợp lệ
-      console.warn("Unauthorized, redirect to login...");
       localStorage.removeItem("accessToken");
-
-      // Cập nhật trạng thái context nếu có thể
-      // Hoặc reload trang để reset context
       window.location.href = "/login";
     }
     return Promise.reject(error);

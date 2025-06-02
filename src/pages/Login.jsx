@@ -16,20 +16,11 @@ const Login = () => {
     setError('');
     try {
       const res = await login({ username, password });
-      console.log("🔧 Login response:", res);
       
       if (res.code === 0 && res.data.authenticated) {
-        // Backend trả về accessToken
         const token = res.data.accessToken;
-        console.log("🔧 Login success - Access Token:", token);
-        console.log("🔧 Full response data:", res.data);
-        
         localStorage.setItem("accessToken", token);
-        console.log("🔧 Token saved to localStorage");
-        
-        // Cập nhật trạng thái đăng nhập trong context
         loginSuccess(token);
-        console.log("🔧 loginSuccess called, navigating to home");
         navigate('/');
       } else {
         console.log("🔧 Login failed - Response:", res);
@@ -65,6 +56,13 @@ const Login = () => {
           />
         </Form.Group>
         <Button variant="primary" type="submit">Login</Button>
+        <Button
+          variant="danger"
+          className="w-100 mt-2"
+          href="http://localhost:8080/api/v1/oauth2/authorization/google"
+        >
+          Login with Google
+        </Button>
       </Form>
     </Container>
   );

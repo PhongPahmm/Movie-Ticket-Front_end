@@ -9,11 +9,13 @@ import UserProfile from "./pages/UserProfile";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+import OAuth2Redirect from "./pages/Oauth2Redirect";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/oauth2/success" element={<OAuth2Redirect />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="movie/:id" element={<MovieDetail />} />

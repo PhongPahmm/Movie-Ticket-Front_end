@@ -1,24 +1,13 @@
 import { Navbar, Nav, Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useEffect } from 'react';
+import { useAuth } from '../context/AuthContext'
 
 const Header = () => {
   const { authenticated, logout } = useAuth();
-
-  // Log mỗi khi component render
-  useEffect(() => {
-    console.log("🔧 Header component - authenticated:", authenticated);
-    console.log("🔧 Header component - localStorage token:", localStorage.getItem("accessToken"));
-  });
-
+console.log("🔁 Header re-render, authenticated:", authenticated);
   const handleLogout = () => {
-    console.log("🔧 Header - handleLogout called");
     logout();
   };
-
-  // Log trực tiếp trong render
-  console.log("🔧 Header render - authenticated:", authenticated);
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg" className="px-4">

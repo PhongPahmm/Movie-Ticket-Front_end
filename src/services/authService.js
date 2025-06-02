@@ -5,7 +5,6 @@ export const login = async (credentials) => {
   return response.data;
 };
 
-// Logout - gọi API với token
 export const logout = async () => {
   const token = localStorage.getItem("accessToken");
   if (token) {
@@ -16,7 +15,6 @@ export const logout = async () => {
       return response.data;
     } catch (error) {
       console.error("Logout API error:", error);
-      // Vẫn return success để frontend có thể clear token
       return { logout: true };
     }
   }
