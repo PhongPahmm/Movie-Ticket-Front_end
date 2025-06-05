@@ -18,7 +18,7 @@ function App() {
         <Route path="/oauth2/success" element={<OAuth2Redirect />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
-          <Route path="movie/:id" element={<MovieDetail />} />
+          <Route path="movies/:id" element={<MovieDetail />} />
           <Route path="booking/:showId" element={<BookingPage />} />
           <Route path="booking-success" element={<BookingSuccess />} />
           <Route path="profile" element={<UserProfile />} />
