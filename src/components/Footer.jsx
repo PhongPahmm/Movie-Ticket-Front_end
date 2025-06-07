@@ -1,23 +1,13 @@
-import React from 'react';
+import { Container } from 'react-bootstrap';
 
 const Footer = () => {
   return (
-    <footer style={styles.footer}>
-      <p>&copy; 2025 Movie Booking. All rights reserved.</p>
+    <footer className="bg-dark text-white text-center py-3 mt-auto w-100">
+      <Container fluid>
+        © {new Date().getFullYear()} MovieTicket. All rights reserved.
+      </Container>
     </footer>
   );
-};
-
-const styles = {
-  footer: {
-    backgroundColor: '#333',
-    color: 'white',
-    textAlign: 'center',
-    padding: '10px 0',
-    position: 'fixed',
-    bottom: 0,
-    width: '100%',
-  }
 };
 
 export default Footer;

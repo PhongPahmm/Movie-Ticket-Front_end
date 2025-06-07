@@ -19,6 +19,7 @@ import {
 import { getGenres } from "../services/genreService";
 import { useNavigate } from "react-router-dom";
 import "../assets/styles/Home.scss";
+import ChatbotUI from "../components/ChatbotUI";
 
 const Home = () => {
   const [tab, setTab] = useState("all");
@@ -227,6 +228,7 @@ const Home = () => {
           </Col>
         </Row>
       </Container>
+      <ChatbotUI />
     </div>
   );
 };

@@ -23,11 +23,9 @@ const Login = () => {
         loginSuccess(token);
         navigate('/');
       } else {
-        console.log("🔧 Login failed - Response:", res);
         setError('Tên đăng nhập hoặc mật khẩu không đúng');
       }
     } catch (err) {
-      console.log("🔧 Login error:", err);
       setError('Lỗi kết nối hoặc thông tin không hợp lệ');
     }
   };

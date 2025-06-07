@@ -13,8 +13,6 @@ export const AuthProvider = ({ children }) => {
     setAuthenticated(!!token);
   }, []);
 
-  useEffect(() => {
-  }, [authenticated]);
 
   const loginSuccess = (token = null) => {
     setAuthenticated(true);
