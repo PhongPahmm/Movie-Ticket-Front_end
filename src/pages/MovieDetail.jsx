@@ -1,18 +1,48 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Container, Row, Col, Button, Modal } from "react-bootstrap";
+import { Card, Container, Row, Col, Button, Modal, Spinner } from "react-bootstrap";
 import { getMovieById } from "../services/movieService";
+import { getShowByMovieAndDate } from "../services/showService";
 
 const MovieDetail = () => {
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [dates, setDates] = useState([]);
+  const [showList, setShowList] = useState([]);
+  const [loadingShows, setLoadingShows] = useState(false);
 
   useEffect(() => {
+    if (!id) return;
     getMovieById(id)
       .then((data) => setMovie(data))
       .catch((err) => console.error("Lỗi khi lấy chi tiết phim:", err));
   }, [id]);
+
+  useEffect(() => {
+    const today = new Date();
+    const dateArr = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(today.getDate() + i);
+      return d;
+    });
+    setDates(dateArr);
+    setSelectedDate(dateArr[0]);
+  }, []);
+
+  useEffect(() => {
+    if (!id || !selectedDate) return;
+    setLoadingShows(true);
+    const formattedDate = selectedDate.toISOString().split("T")[0];
+
+    getShowByMovieAndDate(id, formattedDate)
+      .then((res) => {
+        setShowList(res.data?.items || []);
+      })
+      .catch((err) => console.error("Lỗi khi lấy danh sách suất chiếu:", err))
+      .finally(() => setLoadingShows(false));
+  }, [id, selectedDate]);
 
   const extractYouTubeId = (url) => {
     const regex = /(?:youtube\.com\/.*v=|youtu\.be\/)([^&]+)/;
@@ -55,10 +85,64 @@ const MovieDetail = () => {
         </Col>
       </Row>
 
+      <hr />
+
+      {/* Chọn ngày */}
+      <div className="my-4">
+        <h5>Chọn ngày chiếu:</h5>
+        <div className="d-flex gap-2 flex-wrap">
+          {dates.map((date, idx) => {
+            const label = date.toLocaleDateString("vi-VN", {
+              weekday: "short",
+              day: "2-digit",
+              month: "2-digit",
+            });
+            return (
+              <Button
+                key={idx}
+                variant={selectedDate.toDateString() === date.toDateString() ? "primary" : "outline-primary"}
+                onClick={() => setSelectedDate(date)}
+              >
+                {label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Danh sách suất chiếu */}
+      <div className="my-4">
+        <h5>Suất chiếu:</h5>
+        {loadingShows ? (
+          <Spinner animation="border" />
+        ) : showList.length === 0 ? (
+          <p>Không có suất chiếu cho ngày này.</p>
+        ) : (
+          <Row className="gap-3">
+            {showList.map((show) => (
+              <Col key={show.showId} md={4}>
+                <Card>
+                  <Card.Body>
+                    <Card.Title>Phòng chiếu: {show.screenId}</Card.Title>
+                    <p>
+                      <strong>Bắt đầu:</strong> {show.startTime}
+                      <br />
+                      <strong>Kết thúc:</strong> {show.endTime}
+                    </p>
+                    <Button variant="success" href={`/booking/${show.showId}`}>
+                      Đặt vé
+                    </Button>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        )}
+      </div>
+
       {/* Modal xem trailer */}
       <Modal show={showTrailer} onHide={() => setShowTrailer(false)} size="lg" centered>
-        <Modal.Header closeButton>
-        </Modal.Header>
+        <Modal.Header closeButton />
         <Modal.Body className="d-flex justify-content-center">
           <div style={{ width: "100%", aspectRatio: "16 / 9" }}>
             <iframe

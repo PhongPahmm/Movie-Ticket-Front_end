@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import OAuth2Redirect from "./pages/Oauth2Redirect";
+import PaymentPage from "./pages/PaymentPage";
 
 function App() {
   return (
@@ -20,6 +21,8 @@ function App() {
           <Route index element={<Home />} />
           <Route path="movies/:id" element={<MovieDetail />} />
           <Route path="booking/:showId" element={<BookingPage />} />
+          <Route path="/booking-return/vnpay-payment" element={<BookingSuccess />} />
+          <Route path="payment" element={<PaymentPage />} />
           <Route path="booking-success" element={<BookingSuccess />} />
           <Route path="profile" element={<UserProfile />} />
           <Route path="login" element={<Login />} />

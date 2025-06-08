@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sendChatRequest } from "../services/chatService";
 
 const ChatbotUI = () => {
   const [chatOpen, setChatOpen] = useState(false);
@@ -7,19 +8,53 @@ const ChatbotUI = () => {
     { sender: "bot", text: "Xin chào! Tôi có thể giúp gì cho bạn về phim?" },
   ]);
 
-  const sendChatMessage = () => {
-    const message = chatInput.trim();
-    if (!message) return;
+  const sendChatMessage = async () => {
+  const message = chatInput.trim();
+  if (!message) return;
 
-    setChatMessages((prev) => [...prev, { sender: "user", text: message }]);
-    setChatInput("");
-    // Ở đây bạn sẽ thêm gọi API để bot trả lời rồi set lại chatMessages
-    // Mình để demo tạm bot trả lời "Đang xử lý..."
-    setChatMessages((prev) => [
-      ...prev,
-      { sender: "bot", text: "Đang xử lý..." },
-    ]);
-  };
+  setChatMessages((prev) => [...prev, { sender: "user", text: message }]);
+  setChatInput("");
+
+  setChatMessages((prev) => [
+    ...prev,
+    { sender: "bot", text: "Đang xử lý..." },
+  ]);
+
+  try {
+    const response = await sendChatRequest(message);
+
+    let rawAnswer = response?.data?.answer || "";
+    let botReply = rawAnswer;
+
+    try {
+      // Thử parse nếu là chuỗi JSON
+      const parsed = JSON.parse(rawAnswer);
+      if (parsed && parsed.text) {
+        botReply = parsed.text;
+      }
+    } catch (e) {
+      // Nếu parse lỗi thì giữ nguyên rawAnswer
+      console.warn("Không phải JSON hợp lệ, dùng answer thô:", rawAnswer);
+    }
+
+    setChatMessages((prev) => {
+      const updated = [...prev];
+      updated.pop(); // remove "Đang xử lý..."
+      return [...updated, { sender: "bot", text: botReply }];
+    });
+  } catch (error) {
+    console.error("Lỗi khi gọi API:", error);
+    setChatMessages((prev) => {
+      const updated = [...prev];
+      updated.pop();
+      return [
+        ...updated,
+        { sender: "bot", text: "Đã xảy ra lỗi khi gửi câu hỏi." },
+      ];
+    });
+  }
+};
+
 
   return (
     <>
