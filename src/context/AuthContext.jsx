@@ -1,18 +1,17 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect } from "react";
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [authenticated, setAuthenticated] = useState(() => {
     const token = localStorage.getItem("accessToken");
-    return !!token; 
+    return !!token;
   });
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     setAuthenticated(!!token);
   }, []);
-
 
   const loginSuccess = (token = null) => {
     setAuthenticated(true);
@@ -28,7 +27,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("🔧 Logout API error:", error);
     }
-    
+
     setAuthenticated(false);
     localStorage.removeItem("accessToken");
   };
@@ -39,5 +38,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = () => useContext(AuthContext);

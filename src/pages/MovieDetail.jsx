@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, Container, Row, Col, Button, Modal, Spinner } from "react-bootstrap";
+import { Card, Col, Row, Button, Modal, Spin, Typography, Space } from "antd";
 import { getMovieById } from "../services/movieService";
 import { getShowByMovieAndDate } from "../services/showService";
+
+const { Title, Paragraph, Text } = Typography;
 
 const MovieDetail = () => {
   const { id } = useParams();
@@ -50,47 +52,50 @@ const MovieDetail = () => {
     return match ? match[1] : null;
   };
 
-  if (!movie) return <p>Đang tải thông tin phim...</p>;
+  if (!movie) return <Spin size="large" />;
 
   const youtubeId = extractYouTubeId(movie.trailerUrl);
 
   return (
-    <Container className="mt-5">
-      <Row>
-        <Col md={5}>
-          <Card bg="dark" text="white">
-            <Card.Img
-              src={`/images/${movie.posterUrl}`}
-              alt={movie.title}
-              style={{ height: 400, objectFit: "cover" }}
-            />
-          </Card>
+    <div style={{ padding: "40px 80px" }}>
+      <Row gutter={[32, 32]}>
+        <Col xs={24} md={8}>
+          <Card
+            cover={
+              <img
+                alt={movie.title}
+                src={`http://localhost:8080/api/v1/images/${movie.posterUrl}`}
+                style={{ height: 500, objectFit: "cover" }}
+              />
+            }
+            bordered={false}
+            style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.2)", borderRadius: 8 }}
+          />
         </Col>
-        <Col md={7}>
-          <h2>{movie.title}</h2>
-          <p><strong>Mô tả:</strong> {movie.description}</p>
-          <p><strong>Thời lượng:</strong> {movie.durationMinutes} phút</p>
-          <p><strong>Ngày khởi chiếu:</strong> {new Date(movie.releaseDate).toLocaleDateString()}</p>
-          <p><strong>Độ tuổi:</strong> {movie.ageRating}</p>
-          <p><strong>Thể loại:</strong> {movie.genres.map((g) => g.name).join(", ")}</p>
-          <p><strong>Đạo diễn:</strong> {movie.director}</p>
-          <p><strong>Diễn viên:</strong> {movie.actors.join(", ")}</p>
-          <p><strong>Ngôn ngữ:</strong> {movie.language}</p>
-          <p><strong>Trạng thái:</strong> {movie.status === "NOW_SHOWING" ? "Đang chiếu" : "Sắp chiếu"}</p>
+
+        <Col xs={24} md={16}>
+          <Title level={2}>{movie.title}</Title>
+          <Paragraph><strong>Mô tả:</strong> {movie.description}</Paragraph>
+          <Paragraph><strong>Thời lượng:</strong> {movie.durationMinutes} phút</Paragraph>
+          <Paragraph><strong>Ngày khởi chiếu:</strong> {new Date(movie.releaseDate).toLocaleDateString()}</Paragraph>
+          <Paragraph><strong>Độ tuổi:</strong> {movie.ageRating}</Paragraph>
+          <Paragraph><strong>Thể loại:</strong> {movie.genres.map(g => g.name).join(", ")}</Paragraph>
+          <Paragraph><strong>Đạo diễn:</strong> {movie.director}</Paragraph>
+          <Paragraph><strong>Diễn viên:</strong> {movie.actors.join(", ")}</Paragraph>
+          <Paragraph><strong>Ngôn ngữ:</strong> {movie.language}</Paragraph>
+          <Paragraph><strong>Trạng thái:</strong> {movie.status === "NOW_SHOWING" ? "Đang chiếu" : "Sắp chiếu"}</Paragraph>
           {youtubeId && (
-            <Button variant="danger" onClick={() => setShowTrailer(true)}>
+            <Button type="primary" danger size="large" onClick={() => setShowTrailer(true)}>
               🎬 Xem Trailer
             </Button>
           )}
         </Col>
       </Row>
 
-      <hr />
-
-      {/* Chọn ngày */}
-      <div className="my-4">
-        <h5>Chọn ngày chiếu:</h5>
-        <div className="d-flex gap-2 flex-wrap">
+      {/* Ngày chiếu */}
+      <div style={{ marginTop: 48 }}>
+        <Title level={4}>Chọn ngày chiếu:</Title>
+        <Space wrap>
           {dates.map((date, idx) => {
             const label = date.toLocaleDateString("vi-VN", {
               weekday: "short",
@@ -100,39 +105,38 @@ const MovieDetail = () => {
             return (
               <Button
                 key={idx}
-                variant={selectedDate.toDateString() === date.toDateString() ? "primary" : "outline-primary"}
+                type={selectedDate.toDateString() === date.toDateString() ? "primary" : "default"}
                 onClick={() => setSelectedDate(date)}
               >
                 {label}
               </Button>
             );
           })}
-        </div>
+        </Space>
       </div>
 
       {/* Danh sách suất chiếu */}
-      <div className="my-4">
-        <h5>Suất chiếu:</h5>
+      <div style={{ marginTop: 32 }}>
+        <Title level={4}>Suất chiếu:</Title>
         {loadingShows ? (
-          <Spinner animation="border" />
+          <Spin />
         ) : showList.length === 0 ? (
-          <p>Không có suất chiếu cho ngày này.</p>
+          <Text>Không có suất chiếu cho ngày này.</Text>
         ) : (
-          <Row className="gap-3">
+          <Row gutter={[16, 16]}>
             {showList.map((show) => (
-              <Col key={show.showId} md={4}>
-                <Card>
-                  <Card.Body>
-                    <Card.Title>Phòng chiếu: {show.screenId}</Card.Title>
-                    <p>
-                      <strong>Bắt đầu:</strong> {show.startTime}
-                      <br />
-                      <strong>Kết thúc:</strong> {show.endTime}
-                    </p>
-                    <Button variant="success" href={`/booking/${show.showId}`}>
+              <Col key={show.showId} xs={24} sm={12} md={8}>
+                <Card
+                  title={`Phòng chiếu: ${show.screenId}`}
+                  extra={
+                    <Button type="link" href={`/booking/${show.showId}`} style={{ color: "#52c41a" }}>
                       Đặt vé
                     </Button>
-                  </Card.Body>
+                  }
+                  bordered
+                >
+                  <p><strong>Bắt đầu:</strong> {show.startTime}</p>
+                  <p><strong>Kết thúc:</strong> {show.endTime}</p>
                 </Card>
               </Col>
             ))}
@@ -140,24 +144,33 @@ const MovieDetail = () => {
         )}
       </div>
 
-      {/* Modal xem trailer */}
-      <Modal show={showTrailer} onHide={() => setShowTrailer(false)} size="lg" centered>
-        <Modal.Header closeButton />
-        <Modal.Body className="d-flex justify-content-center">
-          <div style={{ width: "100%", aspectRatio: "16 / 9" }}>
-            <iframe
-              width="100%"
-              height="100%"
-              src={`https://www.youtube.com/embed/${youtubeId}`}
-              title="YouTube trailer"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
-          </div>
-        </Modal.Body>
+      {/* Modal Trailer */}
+      <Modal
+        open={showTrailer}
+        onCancel={() => setShowTrailer(false)}
+        footer={null}
+        width={800}
+        centered
+      >
+        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
+          <iframe
+            src={`https://www.youtube.com/embed/${youtubeId}`}
+            title="YouTube trailer"
+            frameBorder="0"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              borderRadius: 8,
+            }}
+          ></iframe>
+        </div>
       </Modal>
-    </Container>
+    </div>
   );
 };
 

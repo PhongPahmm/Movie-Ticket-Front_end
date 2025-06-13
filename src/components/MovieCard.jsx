@@ -2,7 +2,7 @@ import { Card } from "react-bootstrap";
 
 const MovieCard = ({ movie }) => (
   <Card className="h-100">
-    <Card.Img variant="top" src={`/images/${movie.posterUrl}`} alt={movie.title} />
+    <Card.Img variant="top" src={`http://localhost:8080/api/v1/images/${movie.posterUrl}`} alt={movie.title} />
     <Card.Body>
       <Card.Title>{movie.title}</Card.Title>
       <Card.Text>

@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import {
-  Container,
+  Layout,
   Row,
   Col,
   Card,
-  ListGroup,
-  Button,
-  ButtonGroup,
-  Pagination,
+  Checkbox,
+  DatePicker,
   Collapse,
-  Form,
-} from "react-bootstrap";
+  Button,
+  Pagination,
+  Space,
+  Typography,
+  Spin,
+} from "antd";
 import {
   getMoviesByStatus,
   getMoviesByGenre,
@@ -20,6 +22,11 @@ import { getGenres } from "../services/genreService";
 import { useNavigate } from "react-router-dom";
 import "../assets/styles/Home.scss";
 import ChatbotUI from "../components/ChatbotUI";
+import dayjs from "dayjs";
+
+const { Content, Sider } = Layout;
+const { Panel } = Collapse;
+const { Title, Text } = Typography;
 
 const Home = () => {
   const [tab, setTab] = useState("all");
@@ -30,8 +37,6 @@ const Home = () => {
   const [selectedGenreIds, setSelectedGenreIds] = useState([]);
   const [releaseDate, setReleaseDate] = useState("");
 
-  const [openGenre, setOpenGenre] = useState(false);
-  const [openDate, setOpenDate] = useState(false);
   const navigate = useNavigate();
 
   const fetchMovies = async (page = 0, status = "all", genreIds = [], date = "") => {
@@ -62,174 +67,143 @@ const Home = () => {
       .catch((error) => console.error("Lỗi khi lấy thể loại:", error));
   }, []);
 
-  const handleGenreChange = (genreId) => {
-    setSelectedGenreIds((prev) =>
-      prev.includes(genreId) ? prev.filter((id) => id !== genreId) : [...prev, genreId]
-    );
+  const handleGenreChange = (checkedValues) => {
+    setSelectedGenreIds(checkedValues);
     setTab("all");
     setReleaseDate("");
   };
 
-  const handleDateChange = (e) => {
-    setReleaseDate(e.target.value);
+  const handleDateChange = (date) => {
+    setReleaseDate(date ? date.format("YYYY-MM-DD") : "");
     setSelectedGenreIds([]);
     setTab("all");
   };
 
   return (
-    <div className="home-container">
-      <div className="banner mb-4">🎬 Banner Quảng Cáo</div>
-
-      <Container fluid>
-        <Row>
-          <Col lg={3} className="mb-4">
-            <Card bg="dark" text="white">
-              <Card.Header>Bộ lọc</Card.Header>
-              <Card.Body>
-                <ListGroup variant="flush">
-                  <ListGroup.Item
-                    action
-                    variant="dark"
-                    onClick={() => setOpenGenre(!openGenre)}
-                    aria-controls="genre-collapse"
-                    aria-expanded={openGenre}
-                  >
-                    Thể loại
-                  </ListGroup.Item>
-                  <Collapse in={openGenre}>
-                    <div id="genre-collapse">
-                      <ul style={{ paddingLeft: 15, marginTop: 10 }}>
-                        {genres.length
-                          ? genres.map((g) => (
-                              <li key={g.id} style={{ listStyle: "none" }}>
-                                <label style={{ cursor: "pointer", color: "white" }}>
-                                  <input
-                                    type="checkbox"
-                                    value={g.id}
-                                    checked={selectedGenreIds.includes(g.id)}
-                                    onChange={() => handleGenreChange(g.id)}
-                                    style={{ marginRight: 8 }}
-                                  />
-                                  {g.name}
-                                </label>
-                              </li>
-                            ))
-                          : "Đang tải thể loại..."}
-                      </ul>
-                    </div>
-                  </Collapse>
-
-                  <ListGroup.Item
-                    action
-                    variant="dark"
-                    onClick={() => setOpenDate(!openDate)}
-                    aria-controls="date-collapse"
-                    aria-expanded={openDate}
-                  >
-                    Ngày chiếu
-                  </ListGroup.Item>
-                  <Collapse in={openDate}>
-                    <div id="date-collapse" className="p-3">
-                      <Form.Control
-                        type="date"
-                        value={releaseDate}
-                        onChange={handleDateChange}
-                      />
-                    </div>
-                  </Collapse>
-                </ListGroup>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col lg={9}>
-            <section className="mb-5">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h4 className="mb-0">🎥 Danh sách phim</h4>
-                <ButtonGroup>
-                  <Button
-                    variant={tab === "all" ? "danger" : "outline-light"}
-                    onClick={() => {
-                      setTab("all");
-                      setSelectedGenreIds([]);
-                      setReleaseDate("");
-                    }}
-                  >
-                    Tất cả
-                  </Button>
-                  <Button
-                    variant={tab === "now_showing" ? "danger" : "outline-light"}
-                    onClick={() => {
-                      setTab("now_showing");
-                      setSelectedGenreIds([]);
-                      setReleaseDate("");
-                    }}
-                  >
-                    Đang chiếu
-                  </Button>
-                  <Button
-                    variant={tab === "coming_soon" ? "danger" : "outline-light"}
-                    onClick={() => {
-                      setTab("coming_soon");
-                      setSelectedGenreIds([]);
-                      setReleaseDate("");
-                    }}
-                  >
-                    Sắp chiếu
-                  </Button>
-                </ButtonGroup>
-              </div>
-
-              <Row xs={2} md={3} xl={4} className="g-4">
-                {movies.map((movie) => (
-                  <Col key={movie.id} onClick={() => navigate(`/movies/${movie.id}`)}>
-                    <Card bg="dark" text="white" className="h-100" style={{ cursor: "pointer" }}>
-                      <Card.Img
-                        variant="top"
-                        src={`/images/${movie.posterUrl}`}
-                        style={{ height: 240, objectFit: "cover" }}
-                      />
-                      <Card.Body>
-                        <Card.Subtitle className="mb-1 text-muted">
-                          {movie.genres?.map((g) => g.name).join(", ") || "Chưa rõ thể loại"}
-                        </Card.Subtitle>
-                        <Card.Text>{movie.releaseDate}</Card.Text>
-                        <Card.Title>{movie.title}</Card.Title>
-                      </Card.Body>
-                    </Card>
-                  </Col>
+    <Layout className="home-container">
+      <div className="banner">
+         Banner Quảng Cáo
+      </div>
+      <Layout>
+        <Sider width={300} style={{ background: "white", color: "black", padding: 16 }}>
+          <Title level={4} style={{ color: "black" }}>Bộ lọc</Title>
+          <Collapse ghost defaultActiveKey={["1", "2"]}>
+            <Panel header="Thể loại" key="1">
+              <Checkbox.Group
+                style={{ display: "flex", flexDirection: "column" }}
+                value={selectedGenreIds}
+                onChange={handleGenreChange}
+              >
+                {genres.map((genre) => (
+                  <Checkbox key={genre.id} value={genre.id} style={{ marginBottom: 8 }}>
+                    {genre.name}
+                  </Checkbox>
                 ))}
-              </Row>
+              </Checkbox.Group>
+            </Panel>
+            <Panel header="Ngày chiếu" key="2">
+              <DatePicker
+                format="YYYY-MM-DD"
+                onChange={handleDateChange}
+                value={releaseDate ? dayjs(releaseDate) : null}
+              />
+            </Panel>
+          </Collapse>
+        </Sider>
 
-              {totalPages > 1 && (
-                <div className="d-flex justify-content-center mt-4">
-                  <Pagination>
-                    <Pagination.Prev
-                      onClick={() => fetchMovies(currentPage - 1, tab, selectedGenreIds, releaseDate)}
-                      disabled={currentPage === 0}
+        <Content style={{ padding: "0 24px" }}>
+          <div className="d-flex justify-content-between align-items-center mt-2 mb-2">
+            <Title level={4}>Danh sách phim</Title>
+            <Space>
+              <Button
+                type={tab === "all" ? "primary" : "default"}
+                onClick={() => {
+                  setTab("all");
+                  setSelectedGenreIds([]);
+                  setReleaseDate("");
+                }}
+              >
+                Tất cả
+              </Button>
+              <Button
+                type={tab === "now_showing" ? "primary" : "default"}
+                onClick={() => {
+                  setTab("now_showing");
+                  setSelectedGenreIds([]);
+                  setReleaseDate("");
+                }}
+              >
+                Đang chiếu
+              </Button>
+              <Button
+                type={tab === "coming_soon" ? "primary" : "default"}
+                onClick={() => {
+                  setTab("coming_soon");
+                  setSelectedGenreIds([]);
+                  setReleaseDate("");
+                }}
+              >
+                Sắp chiếu
+              </Button>
+            </Space>
+          </div>
+
+          <Row gutter={[16, 24]}>
+            {movies.map((movie) => (
+              <Col xs={24} sm={12} md={8} lg={6} key={movie.id}>
+                <Card
+                  hoverable
+                  style={{ height: "100%" }}
+                  cover={
+                    <img
+                      alt={movie.title}
+                      src={`http://localhost:8080/api/v1/images/${movie.posterUrl}`}
+                      style={{ height: 320, objectFit: "cover" }}
                     />
-                    {[...Array(totalPages)].map((_, index) => (
-                      <Pagination.Item
-                        key={index}
-                        active={index === currentPage}
-                        onClick={() => fetchMovies(index, tab, selectedGenreIds, releaseDate)}
-                      >
-                        {index + 1}
-                      </Pagination.Item>
-                    ))}
-                    <Pagination.Next
-                      onClick={() => fetchMovies(currentPage + 1, tab, selectedGenreIds, releaseDate)}
-                      disabled={currentPage === totalPages - 1}
-                    />
-                  </Pagination>
-                </div>
-              )}
-            </section>
-          </Col>
-        </Row>
-      </Container>
+                  }
+                  onClick={() => navigate(`/movies/${movie.id}`)}
+                >
+                  <Card.Meta
+                    title={movie.title}
+                    description={
+                      <>
+                        <Text type="secondary">
+                          {movie.genres?.map((g) => g.name).join(", ") || "Chưa rõ thể loại"}
+                        </Text>
+                        <br />
+                        <Text>{movie.releaseDate}</Text>
+                      </>
+                    }
+                  />
+                </Card>
+              </Col>
+            ))}
+          </Row>
+
+          {totalPages > 1 && (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: "16px 0",
+    }}
+  >
+    <Pagination
+      current={currentPage + 1}
+      pageSize={1}
+      total={totalPages}
+      onChange={(page) =>
+        fetchMovies(page - 1, tab, selectedGenreIds, releaseDate)
+      }
+    />
+  </div>
+)}
+
+        </Content>
+      </Layout>
       <ChatbotUI />
-    </div>
+    </Layout>
   );
 };
 

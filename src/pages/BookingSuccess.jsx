@@ -64,7 +64,7 @@ const BookingSuccess = () => {
           <>
             {paymentResult.paymentStatus === "SUCCESS" ? (
               <Alert variant="success" className="text-center">
-                Thanh toán thành công! 🎉
+                Thanh toán thành công! 🎉 Check email để xem chi tiết vé
                 <br />
                 Mã đặt vé: <strong>{paymentResult.bookingId}</strong>
                 <br />

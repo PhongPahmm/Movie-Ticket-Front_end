@@ -1,6 +1,6 @@
 import { Navbar, Nav, Container, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 const Header = () => {
   const { authenticated, logout } = useAuth();
@@ -21,9 +21,6 @@ const Header = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto gap-3 align-items-center">
             <Nav.Link as={Link} to="/" className="text-white">Trang chủ</Nav.Link>
-            <Nav.Link as={Link} to="/movies" className="text-white">Phim</Nav.Link>
-            <Nav.Link as={Link} to="/booking" className="text-white">Đặt vé</Nav.Link>
-
             {!authenticated ? (
               <>
                 <Nav.Link as={Link} to="/login" className="text-white">Đăng nhập</Nav.Link>

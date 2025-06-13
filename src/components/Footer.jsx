@@ -1,12 +1,12 @@
-import { Container } from 'react-bootstrap';
+import { Layout } from 'antd';
+
+const { Footer: AntFooter } = Layout;
 
 const Footer = () => {
   return (
-    <footer className="bg-dark text-white text-center py-3 mt-auto w-100">
-      <Container fluid>
-        © {new Date().getFullYear()} MovieTicket. All rights reserved.
-      </Container>
-    </footer>
+    <AntFooter style={{ textAlign: 'center', backgroundColor: '#141414', color: 'white', padding: '16px 0' }}>
+      © {new Date().getFullYear()} MovieTicket. All rights reserved.
+    </AntFooter>
   );
 };
 
