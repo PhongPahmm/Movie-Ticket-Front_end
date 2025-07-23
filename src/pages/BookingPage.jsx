@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Row,
   Col,
@@ -16,6 +16,8 @@ import { getSeatsByShowId } from "../services/seatService";
 import { getShowById } from "../services/showService";
 import { getMovieById } from "../services/movieService";
 import { getPriceByShowIdSeatTypeDate } from "../services/priceService";
+import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
 
 const { Title, Text } = Typography;
 
@@ -30,6 +32,163 @@ const BookingPage = () => {
   const [showInfo, setShowInfo] = useState(null);
   const [movieInfo, setMovieInfo] = useState(null);
   const [loadingInfo, setLoadingInfo] = useState(true);
+
+  // WebSocket refs
+  const stompClientRef = useRef(null);
+  const [isConnected, setIsConnected] = useState(false);
+
+  // WebSocket connection setup
+  useEffect(() => {
+    if (!showId) return;
+
+    const connectWebSocket = () => {
+      try {
+        if (typeof global === "undefined") {
+          window.global = window;
+        }
+
+        const stompClient = new Client({
+          webSocketFactory: () => new SockJS("http://localhost:8080/api/v1/ws"),
+          debug: (str) => console.log("📡 [DEBUG-STOMP] " + str),
+          reconnectDelay: 5000,
+          heartbeatIncoming: 4000,
+          heartbeatOutgoing: 4000,
+          connectHeaders: {
+            // Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        stompClient.onConnect = (frame) => {
+          console.log("✅ [DEBUG] WebSocket connected:", frame);
+          setIsConnected(true);
+
+          const subscription = stompClient.subscribe(
+            `/topic/show/${showId}/seats`,
+            (message) => {
+              console.log(
+                "📨 [DEBUG] Received seat update message:",
+                message.body
+              );
+
+              try {
+                const seatUpdate = JSON.parse(message.body);
+                console.log("🔄 [DEBUG] Parsed seat update:", seatUpdate);
+
+                if (!Array.isArray(seatUpdate.seatIds)) {
+                  console.error(
+                    "❌ [DEBUG] seatIds is not an array:",
+                    seatUpdate.seatIds
+                  );
+                  return;
+                }
+
+                // ✅ Cập nhật danh sách ghế
+                setSeats((prevSeats) => {
+                  const updated = prevSeats.map((seat) => {
+                    if (
+                      seatUpdate.seatIds.some(
+                        (id) => String(id) === String(seat.id)
+                      )
+                    ) {
+                      if (seat.status !== seatUpdate.seatStatus) {
+                        console.log(
+                          `🔁 [DEBUG] Updating seat ${seat.id} from ${seat.status} to ${seatUpdate.seatStatus}`
+                        );
+                        return { ...seat, status: seatUpdate.seatStatus };
+                      }
+                      return { ...seat }; // Ép render
+                    }
+                    return seat;
+                  });
+
+                  return [...updated];
+                });
+
+                // ✅ Gỡ các ghế bị chiếm khỏi selectedSeats nếu có
+                if (
+                  seatUpdate.seatStatus === "PENDING" ||
+                  seatUpdate.seatStatus === "BOOKED"
+                ) {
+                  setSelectedSeats((prevSelected) => {
+                    const affectedSeats = prevSelected.filter((seatId) =>
+                      seatUpdate.seatIds.some(
+                        (id) => String(id) === String(seatId)
+                      )
+                    );
+
+                    if (affectedSeats.length > 0) {
+                      console.warn(
+                        `[DEBUG] ⚠ Ghế bị ảnh hưởng: ${affectedSeats.join(
+                          ", "
+                        )}`
+                      );
+
+                      if (seatUpdate.seatStatus === "PENDING") {
+                        message.warning(
+                          "Một số ghế bạn đã chọn đang được đặt bởi người khác"
+                        );
+                      } else {
+                        message.error("Một số ghế bạn đã chọn đã được đặt");
+                      }
+
+                      return prevSelected.filter(
+                        (seatId) =>
+                          !seatUpdate.seatIds.some(
+                            (id) => String(id) === String(seatId)
+                          )
+                      );
+                    }
+
+                    return prevSelected;
+                  });
+                }
+              } catch (error) {
+                console.error("❌ [DEBUG] Error parsing message body:", error);
+              }
+            }
+          );
+
+          console.log(
+            "📡 [DEBUG] Subscribed to topic:",
+            `/topic/show/${showId}/seats`
+          );
+        };
+
+        stompClient.onStompError = (frame) => {
+          console.error("🚨 [DEBUG] STOMP error:", frame.headers["message"]);
+          console.error("📄 [DEBUG] Frame body:", frame.body);
+          setIsConnected(false);
+        };
+
+        stompClient.onWebSocketError = (error) => {
+          console.error("❌ [DEBUG] WebSocket connection error:", error);
+          setIsConnected(false);
+        };
+
+        stompClient.onDisconnect = () => {
+          console.log("🔌 [DEBUG] WebSocket disconnected");
+          setIsConnected(false);
+        };
+
+        stompClient.activate();
+        stompClientRef.current = stompClient;
+      } catch (err) {
+        console.error("❌ [DEBUG] Error initializing WebSocket:", err);
+        setIsConnected(false);
+      }
+    };
+
+    const timeout = setTimeout(connectWebSocket, 1000);
+
+    return () => {
+      clearTimeout(timeout);
+      if (stompClientRef.current && stompClientRef.current.connected) {
+        console.log("🧹 [DEBUG] Cleaning up WebSocket connection...");
+        stompClientRef.current.deactivate();
+        setIsConnected(false);
+      }
+    };
+  }, [showId]);
 
   useEffect(() => {
     if (!showId) {
@@ -246,6 +405,19 @@ const BookingPage = () => {
             <Tag color="#fadb14">SELECTED</Tag>
             <Tag color="#595959">BOOKED</Tag>
             <Tag color="#d46b08">PENDING</Tag>
+          </div>
+
+          {/* WebSocket connection indicator */}
+          <div style={{ marginTop: 10, fontSize: 12 }}>
+            {isConnected ? (
+              <span style={{ color: "#52c41a" }}>
+                🟢 Đang đồng bộ trạng thái ghế theo thời gian thực
+              </span>
+            ) : (
+              <span style={{ color: "#ff4d4f" }}>
+                🔴 Chưa kết nối đồng bộ trạng thái ghế
+              </span>
+            )}
           </div>
         </Card>
       </Col>
